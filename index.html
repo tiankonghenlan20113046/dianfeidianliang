@@ -137,6 +137,12 @@ body {
   color: var(--ink);
 }
 
+.chart-box .chart-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: normal;
+}
+
 .chart-container {
   width: 100%;
   height: 300px;
@@ -236,17 +242,17 @@ tbody tr.zero-row { color: var(--muted); opacity: 0.5; }
 
 <section class="charts-row">
   <div class="chart-box">
-    <h3>月度电费</h3>
+    <h3>月度电费 <span class="chart-hint">（点击柱子查看每日用电量）</span></h3>
     <div class="chart-container" id="chart-monthly-cost"></div>
   </div>
   <div class="chart-box">
-    <h3>月度电量</h3>
+    <h3>月度电量 <span class="chart-hint">（点击柱子查看每日用电量）</span></h3>
     <div class="chart-container" id="chart-monthly-kwh"></div>
   </div>
 </section>
 
 <section class="table-wrap">
-  <h3 id="table-title">详细数据</h3>
+  <h3 id="table-title">详细数据 <span style="font-weight:normal;font-size:0.78rem;color:var(--muted)">（点击行查看该月每日用电量）</span></h3>
   <table>
     <thead>
       <tr>
@@ -325,8 +331,9 @@ tbody tr.zero-row { color: var(--muted); opacity: 0.5; }
     var html = '';
     data.forEach(function (d) {
       var zeroClass = d.kwh === 0 && d.cost === 0 ? ' zero-row' : '';
-      html += '<tr class="' + zeroClass + '">' +
-        '<td>' + d.year + '-' + String(d.month).padStart(2, '0') + '</td>' +
+      var monthKey = d.year + '-' + String(d.month).padStart(2, '0');
+      html += '<tr class="' + zeroClass + '" style="cursor:pointer" onclick="location.href=\'daily.html?m=' + monthKey + '\'" title="点击查看' + d.year + '年' + d.month + '月每日用电量">' +
+        '<td>' + monthKey + '</td>' +
         '<td>' + d.kwh + '</td>' +
         '<td>' + d.cost.toFixed(2) + '</td>' +
         '<td>' + (d.note || '-') + '</td>' +

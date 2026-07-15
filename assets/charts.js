@@ -64,9 +64,16 @@
 
     var baseOption = makeBaseOption(months);
 
+    // 点击柱子跳转到日用电量
+    function onChartClick(params) {
+      var m = months[params.dataIndex];
+      if (m) location.href = 'daily.html?m=' + m;
+    }
+
     // 电费柱状图
     if (!costChart) {
       costChart = echarts.init(document.getElementById('chart-monthly-cost'), null, { renderer: 'svg' });
+      costChart.on('click', onChartClick);
       window.addEventListener('resize', function () { costChart.resize(); });
     }
     costChart.setOption(Object.assign({}, baseOption, {
@@ -95,6 +102,7 @@
     // 电量折线图
     if (!kwhChart) {
       kwhChart = echarts.init(document.getElementById('chart-monthly-kwh'), null, { renderer: 'svg' });
+      kwhChart.on('click', onChartClick);
       window.addEventListener('resize', function () { kwhChart.resize(); });
     }
     kwhChart.setOption(Object.assign({}, baseOption, {

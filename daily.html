@@ -523,7 +523,14 @@ tbody tr:hover { background: rgba(56,189,248,0.08); }
     allData = data;
 
     var months = getMonths();
-    currentMonth = months[0];
+    // 读取 URL 参数 ?m=2026-04
+    var params = new URLSearchParams(window.location.search);
+    var paramMonth = params.get('m');
+    if (paramMonth && months.indexOf(paramMonth) !== -1) {
+      currentMonth = paramMonth;
+    } else {
+      currentMonth = months[0];
+    }
 
     var now = new Date();
     document.getElementById('update-time').textContent =
