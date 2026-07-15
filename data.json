@@ -218,8 +218,8 @@
   {
     "year": 2026,
     "month": 1,
-    "kwh": 469,
-    "cost": 223,
+    "kwh": 1011,
+    "cost": 543,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -227,8 +227,8 @@
   {
     "year": 2026,
     "month": 2,
-    "kwh": 298,
-    "cost": 142,
+    "kwh": 614,
+    "cost": 321,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -236,8 +236,8 @@
   {
     "year": 2026,
     "month": 3,
-    "kwh": 418,
-    "cost": 204,
+    "kwh": 263,
+    "cost": 139,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -245,8 +245,8 @@
   {
     "year": 2026,
     "month": 4,
-    "kwh": 167,
-    "cost": 79,
+    "kwh": 128,
+    "cost": 63,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -254,8 +254,8 @@
   {
     "year": 2026,
     "month": 5,
-    "kwh": 171,
-    "cost": 80,
+    "kwh": 117,
+    "cost": 58,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -263,17 +263,8 @@
   {
     "year": 2026,
     "month": 6,
-    "kwh": 0,
-    "cost": 0,
-    "peak_kwh": 0,
-    "valley_kwh": 0,
-    "note": ""
-  },
-  {
-    "year": 2026,
-    "month": 7,
-    "kwh": 0,
-    "cost": 0,
+    "kwh": 139,
+    "cost": 68,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
