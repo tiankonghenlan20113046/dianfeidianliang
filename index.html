@@ -17,26 +17,23 @@
   --rule: #334155;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg);
   color: var(--ink);
   min-height: 100vh;
   padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-/* 顶部标题栏 */
 .header {
   text-align: center;
-  padding: 20px 0 24px;
+  padding: 20px 0 20px;
   border-bottom: 1px solid var(--rule);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .header h1 {
@@ -47,90 +44,102 @@ body {
 
 .header .meta {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-/* KPI 卡片行 */
+/* 年份切换 */
+.year-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.year-tab {
+  padding: 8px 24px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.year-tab:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.year-tab.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: bold;
+}
+
+/* KPI 卡片 */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
 .kpi-card {
   background: var(--bg2);
   border: 1px solid var(--rule);
   border-radius: 10px;
-  padding: 20px;
+  padding: 18px 14px;
   text-align: center;
 }
 
 .kpi-card .label {
   color: var(--muted);
-  font-size: 0.85rem;
-  margin-bottom: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
 }
 
 .kpi-card .value {
   color: var(--accent);
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   font-weight: bold;
 }
 
 .kpi-card .unit {
   color: var(--muted);
-  font-size: 0.8rem;
-  margin-left: 4px;
+  font-size: 0.78rem;
+  margin-left: 3px;
 }
 
-/* 图表区 */
+.kpi-card.avg .value { color: var(--accent2); }
+
+/* 图表 */
 .charts-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
 .chart-box {
   background: var(--bg2);
   border: 1px solid var(--rule);
   border-radius: 10px;
-  padding: 16px;
-  min-height: 360px;
+  padding: 14px;
 }
 
 .chart-box h3 {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: bold;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   color: var(--ink);
 }
 
-.chart-box .chart-container {
+.chart-container {
   width: 100%;
   height: 300px;
-}
-
-/* 峰谷电量图 */
-.chart-full {
-  background: var(--bg2);
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 24px;
-}
-
-.chart-full h3 {
-  font-size: 0.95rem;
-  font-weight: bold;
-  margin-bottom: 12px;
-  color: var(--ink);
-}
-
-.chart-full .chart-container {
-  width: 100%;
-  height: 320px;
 }
 
 /* 数据表格 */
@@ -138,22 +147,18 @@ body {
   background: var(--bg2);
   border: 1px solid var(--rule);
   border-radius: 10px;
-  padding: 16px;
+  padding: 14px;
   overflow-x: auto;
 }
 
 .table-wrap h3 {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: bold;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   color: var(--ink);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
+table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
 
 thead th {
   background: var(--accent);
@@ -165,21 +170,16 @@ thead th {
 }
 
 tbody td {
-  padding: 10px 12px;
+  padding: 9px 12px;
   text-align: center;
   border-bottom: 1px solid var(--rule);
   white-space: nowrap;
 }
 
-tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.03);
-}
+tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+tbody tr:hover { background: rgba(56,189,248,0.08); }
+tbody tr.zero-row { color: var(--muted); opacity: 0.5; }
 
-tbody tr:hover {
-  background: rgba(56, 189, 248, 0.08);
-}
-
-/* 暂无数据 */
 .no-data {
   text-align: center;
   color: var(--muted);
@@ -187,33 +187,17 @@ tbody tr:hover {
   font-size: 0.95rem;
 }
 
-/* 响应式 */
 @media (max-width: 768px) {
-  body {
-    padding: 12px;
-  }
-
-  .kpi-row {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .charts-row {
-    grid-template-columns: 1fr;
-  }
-
-  .header h1 {
-    font-size: 1.2rem;
-  }
-
-  .kpi-card .value {
-    font-size: 1.4rem;
-  }
+  body { padding: 12px; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .charts-row { grid-template-columns: 1fr; }
+  .header h1 { font-size: 1.2rem; }
+  .kpi-card .value { font-size: 1.3rem; }
 }
 
 @media (max-width: 480px) {
-  .kpi-row {
-    grid-template-columns: 1fr;
-  }
+  .kpi-row { grid-template-columns: 1fr; }
+  .year-tab { padding: 6px 16px; font-size: 0.85rem; }
 }
 </style>
 </head>
@@ -227,6 +211,8 @@ tbody tr:hover {
   </div>
 </header>
 
+<div class="year-tabs" id="year-tabs"></div>
+
 <section class="kpi-row" id="kpi-row">
   <div class="kpi-card">
     <div class="label">本月电量</div>
@@ -237,11 +223,11 @@ tbody tr:hover {
     <div><span class="value" id="kpi-cost">--</span><span class="unit">元</span></div>
   </div>
   <div class="kpi-card">
-    <div class="label">年度累计电量</div>
+    <div class="label" id="kpi-year-label">年度累计电量</div>
     <div><span class="value" id="kpi-year-kwh">--</span><span class="unit">kWh</span></div>
   </div>
   <div class="kpi-card">
-    <div class="label">年度累计电费</div>
+    <div class="label" id="kpi-year-cost-label">年度累计电费</div>
     <div><span class="value" id="kpi-year-cost">--</span><span class="unit">元</span></div>
   </div>
 </section>
@@ -257,21 +243,14 @@ tbody tr:hover {
   </div>
 </section>
 
-<section class="chart-full">
-  <h3>峰谷电量对比</h3>
-  <div class="chart-container" id="chart-peak-valley"></div>
-</section>
-
 <section class="table-wrap">
-  <h3>详细数据</h3>
+  <h3 id="table-title">详细数据</h3>
   <table>
     <thead>
       <tr>
         <th>年月</th>
         <th>电量 (kWh)</th>
         <th>电费 (元)</th>
-        <th>峰电量 (kWh)</th>
-        <th>谷电量 (kWh)</th>
         <th>备注</th>
       </tr>
     </thead>
@@ -280,73 +259,122 @@ tbody tr:hover {
 </section>
 
 <script>
-(async function () {
-  try {
-    const res = await fetch('data.json');
-    const data = await res.json();
-    window.__DATA = data;
+(function () {
+  var allData = [];
+  var currentYear = null; // null = 全部
 
-    // 设置最后更新时间
-    const now = new Date();
-    document.getElementById('update-time').textContent =
-      ' | 最后更新: ' + now.getFullYear() + '-' +
-      String(now.getMonth() + 1).padStart(2, '0') + '-' +
-      String(now.getDate()).padStart(2, '0') + ' ' +
-      String(now.getHours()).padStart(2, '0') + ':' +
-      String(now.getMinutes()).padStart(2, '0');
+  function getYears() {
+    var set = {};
+    allData.forEach(function (d) { set[d.year] = true; });
+    return Object.keys(set).map(Number).sort(function (a, b) { return b - a; });
+  }
 
-    // 判断是否所有数据都为0
-    const hasData = data.some(function (d) { return d.kwh > 0 || d.cost > 0; });
+  function getFilteredData() {
+    if (currentYear === null) return allData;
+    return allData.filter(function (d) { return d.year === currentYear; });
+  }
 
-    if (!hasData) {
-      document.getElementById('kpi-kwh').textContent = '暂无数据';
-      document.getElementById('kpi-cost').textContent = '暂无数据';
-      document.getElementById('kpi-year-kwh').textContent = '暂无数据';
-      document.getElementById('kpi-year-cost').textContent = '暂无数据';
-      document.getElementById('data-tbody').innerHTML =
-        '<tr><td colspan="6" style="padding:30px;color:var(--muted)">暂无数据</td></tr>';
-      // 仍然初始化图表（空图表）
-      var s = document.createElement('script');
-      s.src = './assets/charts.js';
-      document.body.appendChild(s);
-      return;
-    }
+  function renderTabs() {
+    var years = getYears();
+    var container = document.getElementById('year-tabs');
+    var html = '<button class="year-tab' + (currentYear === null ? ' active' : '') +
+      '" data-year="">全部</button>';
+    years.forEach(function (y) {
+      html += '<button class="year-tab' + (currentYear === y ? ' active' : '') +
+        '" data-year="' + y + '">' + y + '年</button>';
+    });
+    container.innerHTML = html;
+    container.querySelectorAll('.year-tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var val = this.getAttribute('data-year');
+        currentYear = val === '' ? null : parseInt(val);
+        renderTabs();
+        renderView();
+      });
+    });
+  }
 
-    // 计算KPI
-    // 本月取数据中最后一条（假设按时间排序）
+  function renderKPI(data) {
     var latest = data[data.length - 1];
-    document.getElementById('kpi-kwh').textContent = latest.kwh.toLocaleString();
-    document.getElementById('kpi-cost').textContent = latest.cost.toFixed(2);
+    if (latest) {
+      document.getElementById('kpi-kwh').textContent = latest.kwh > 0 ? latest.kwh.toLocaleString() : '暂无';
+      document.getElementById('kpi-cost').textContent = latest.cost > 0 ? latest.cost.toFixed(2) : '暂无';
+    } else {
+      document.getElementById('kpi-kwh').textContent = '--';
+      document.getElementById('kpi-cost').textContent = '--';
+    }
 
     var yearKwh = data.reduce(function (s, d) { return s + d.kwh; }, 0);
     var yearCost = data.reduce(function (s, d) { return s + d.cost; }, 0);
     document.getElementById('kpi-year-kwh').textContent = yearKwh.toLocaleString();
     document.getElementById('kpi-year-cost').textContent = yearCost.toFixed(2);
 
-    // 渲染表格
+    var label = currentYear ? currentYear + '年累计' : '累计总计';
+    document.getElementById('kpi-year-label').textContent = label + '电量';
+    document.getElementById('kpi-year-cost-label').textContent = label + '电费';
+  }
+
+  function renderTable(data) {
     var tbody = document.getElementById('data-tbody');
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:30px;color:var(--muted)">暂无数据</td></tr>';
+      return;
+    }
     var html = '';
     data.forEach(function (d) {
-      html += '<tr>' +
+      var zeroClass = d.kwh === 0 && d.cost === 0 ? ' zero-row' : '';
+      html += '<tr class="' + zeroClass + '">' +
         '<td>' + d.year + '-' + String(d.month).padStart(2, '0') + '</td>' +
         '<td>' + d.kwh + '</td>' +
         '<td>' + d.cost.toFixed(2) + '</td>' +
-        '<td>' + d.peak_kwh + '</td>' +
-        '<td>' + d.valley_kwh + '</td>' +
         '<td>' + (d.note || '-') + '</td>' +
         '</tr>';
     });
     tbody.innerHTML = html;
+  }
+
+  function renderCharts(data) {
+    window.__CHART_DATA = data;
+    if (window.__initCharts) {
+      window.__initCharts();
+    }
+  }
+
+  function renderView() {
+    var data = getFilteredData();
+    renderKPI(data);
+    renderTable(data);
+    renderCharts(data);
+  }
+
+  // 启动
+  fetch('data.json').then(function (r) { return r.json(); }).then(function (data) {
+    allData = data;
+    window.__ALL_DATA = data;
+
+    // 默认选中最新年份
+    var years = getYears();
+    currentYear = years[0];
+
+    // 更新时间
+    var now = new Date();
+    document.getElementById('update-time').textContent =
+      ' | 更新: ' + now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0');
+
+    renderTabs();
+    renderView();
 
     // 加载图表脚本
     var s = document.createElement('script');
     s.src = './assets/charts.js';
     document.body.appendChild(s);
-  } catch (e) {
+  }).catch(function (e) {
     console.error('加载数据失败:', e);
     document.getElementById('data-tbody').innerHTML =
-      '<tr><td colspan="6" style="padding:30px;color:var(--muted)">数据加载失败</td></tr>';
-  }
+      '<tr><td colspan="4" style="padding:30px;color:var(--muted)">数据加载失败</td></tr>';
+  });
 })();
 </script>
 
