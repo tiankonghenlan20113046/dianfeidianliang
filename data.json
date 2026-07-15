@@ -1,9 +1,171 @@
 [
   {
+    "year": 2024,
+    "month": 1,
+    "kwh": 91,
+    "cost": 49,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 2,
+    "kwh": 408,
+    "cost": 197,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 3,
+    "kwh": 93,
+    "cost": 45,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 4,
+    "kwh": 141,
+    "cost": 65,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 5,
+    "kwh": 131,
+    "cost": 60,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 6,
+    "kwh": 161,
+    "cost": 74,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 7,
+    "kwh": 293,
+    "cost": 147,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 8,
+    "kwh": 392,
+    "cost": 200,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 9,
+    "kwh": 132,
+    "cost": 64,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 10,
+    "kwh": 98,
+    "cost": 48,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 11,
+    "kwh": 49,
+    "cost": 24,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2024,
+    "month": 12,
+    "kwh": 542,
+    "cost": 291,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2025,
+    "month": 1,
+    "kwh": 704,
+    "cost": 369,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "kwh": 601,
+    "cost": 318,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2025,
+    "month": 3,
+    "kwh": 248,
+    "cost": 126,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2025,
+    "month": 4,
+    "kwh": 165,
+    "cost": 84,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2025,
+    "month": 5,
+    "kwh": 106,
+    "cost": 52,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
+    "year": 2025,
+    "month": 6,
+    "kwh": 205,
+    "cost": 105,
+    "peak_kwh": 0,
+    "valley_kwh": 0,
+    "note": ""
+  },
+  {
     "year": 2025,
     "month": 7,
-    "kwh": 0,
-    "cost": 0,
+    "kwh": 509,
+    "cost": 265,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -11,8 +173,8 @@
   {
     "year": 2025,
     "month": 8,
-    "kwh": 0,
-    "cost": 0,
+    "kwh": 252,
+    "cost": 131,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -20,8 +182,8 @@
   {
     "year": 2025,
     "month": 9,
-    "kwh": 0,
-    "cost": 0,
+    "kwh": 154,
+    "cost": 87,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -29,8 +191,8 @@
   {
     "year": 2025,
     "month": 10,
-    "kwh": 0,
-    "cost": 0,
+    "kwh": 137,
+    "cost": 76,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -38,8 +200,8 @@
   {
     "year": 2025,
     "month": 11,
-    "kwh": 0,
-    "cost": 0,
+    "kwh": 216,
+    "cost": 122,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
@@ -47,8 +209,8 @@
   {
     "year": 2025,
     "month": 12,
-    "kwh": 0,
-    "cost": 0,
+    "kwh": 677,
+    "cost": 395,
     "peak_kwh": 0,
     "valley_kwh": 0,
     "note": ""
