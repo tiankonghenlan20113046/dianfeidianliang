@@ -1,37 +1,57 @@
 # dianfeidianliang
 
-#### 介绍
-显示每月的电量电费数据
+## 介绍
 
-#### 软件架构
-软件架构说明
+月度电费电量数据可视化看板。通过 Gitee Pages 实时展示每月用电数据。
 
+## 数据结构
 
-#### 安装教程
+数据存储在 `data.json`，每月一条记录：
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+```json
+{
+  "year": 2026,
+  "month": 7,
+  "kwh": 320.5,
+  "cost": 156.8,
+  "peak_kwh": 200.0,
+  "valley_kwh": 120.5,
+  "note": ""
+}
+```
 
-#### 使用说明
+| 字段 | 说明 |
+|------|------|
+| year | 年份 |
+| month | 月份 (1-12) |
+| kwh | 当月总电量 (kWh) |
+| cost | 当月电费 (元) |
+| peak_kwh | 峰时电量 (kWh) |
+| valley_kwh | 谷时电量 (kWh) |
+| note | 备注 |
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## 更新数据
 
-#### 参与贡献
+**方式一：双击 `update.bat`**（推荐）
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+按提示输入年月、电量、电费，自动提交并推送到 Gitee。
 
+**方式二：手动编辑 `data.json`**
 
-#### 特技
+直接编辑 JSON 文件，然后：
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+```bash
+git add data.json
+git commit -m "update: 2026-07 data"
+git push origin master
+```
+
+## 在线查看
+
+开启 Gitee Pages 后，访问 Gitee 提供的链接即可查看仪表盘。
+
+## 技术栈
+
+- HTML + CSS + JavaScript
+- [ECharts](https://echarts.apache.org/) 图表
+- Gitee Pages 托管
