@@ -29,6 +29,9 @@
       var costTotalMatch = text.match(/年(?:电费)?(?:累计|总计)[^\d]*(\d+(?:\.\d+)?)/);
       if (costTotalMatch) totals.push(parseFloat(costTotalMatch[1]));
 
+      // 各种 Unicode 连字符/破折号变体
+      var DASHES = '[-\u2010\u2011\u2012\u2013\u2014\u2015\u2212~至到]';
+
       lines.forEach(function (line) {
         line = line.trim();
         if (!line) return;
@@ -48,15 +51,21 @@
           }
         }
 
-        // 格式2: "1月1日-1月31日 1011 543" 或 "1月1日~1月31日 1011 543"
-        var m2 = line.match(/(\d{1,2})月\d{1,2}日?[-—~至到]\d{1,2}月\d{1,2}日?\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)/);
-        if (m2) {
-          var month2 = parseInt(m2[1]);
-          var kwh2 = parseFloat(m2[2]);
-          var cost2 = parseFloat(m2[3]);
-          if (month2 >= 1 && month2 <= 12 && kwh2 > 0 && kwh2 < 5000 && cost2 > 0 && cost2 < 5000) {
-            results.push({ year: currentYear, month: month2, kwh: kwh2, cost: cost2 });
-            return;
+        // 格式2: "1月1日-1月31日 1011 543"
+        // 使用更宽松的方式：先匹配日期范围，再提取所有数字
+        var dateRangeMatch = line.match(new RegExp('(\\d{1,2})月\\d{1,2}日?' + DASHES + '\\d{1,2}月\\d{1,2}日?'));
+        if (dateRangeMatch) {
+          var month2 = parseInt(dateRangeMatch[1]);
+          // 提取行中所有数字（支持噪点干扰）
+          var nums = line.match(/\d+(?:\.\d+)?/g);
+          if (nums && nums.length >= 3) {
+            // 取倒数两个数字作为电量和电费（避免开头月份数字被误用）
+            var kwh2 = parseFloat(nums[nums.length - 2]);
+            var cost2 = parseFloat(nums[nums.length - 1]);
+            if (month2 >= 1 && month2 <= 12 && kwh2 > 0 && kwh2 < 5000 && cost2 > 0 && cost2 < 5000) {
+              results.push({ year: currentYear, month: month2, kwh: kwh2, cost: cost2 });
+              return;
+            }
           }
         }
 
