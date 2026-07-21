@@ -6,18 +6,25 @@
   window.OcrParser = {
 
     /**
+     * 清理文本中的各种不可见 Unicode 字符
+     */
+    _cleanText: function (text) {
+      return text
+        .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u00AD\u2018\u2019\u201C\u201D\uFE63\uFF0D]/g, '-')
+        .replace(/[\u00A0\u2000-\u200F\u2028-\u202F\u205F\u3000\uFEFF]/g, ' ')
+        .replace(/\[.*?\]/g, '');
+    },
+
+    /**
      * 解析月度电费电量数据
-     * 支持格式：
-     *   "2025-01 704 369.00"
-     *   "1月1日-1月31日 1011 543"
-     *   "1月 1011 543"
+     * 核心策略：找到"X月"关键词 → 提取该行所有数字 → 取最后两个有效数值
      */
     parseMonthly: function (text) {
       var results = [];
+      text = this._cleanText(text);
       var lines = text.split(/\n/);
       var currentYear = null;
 
-      // 尝试提取年份
       var yearMatch = text.match(/20\d{2}/);
       if (yearMatch) currentYear = parseInt(yearMatch[0]);
       if (!currentYear) currentYear = new Date().getFullYear();
@@ -29,76 +36,43 @@
       var costTotalMatch = text.match(/年(?:电费)?(?:累计|总计)[^\d]*(\d+(?:\.\d+)?)/);
       if (costTotalMatch) totals.push(parseFloat(costTotalMatch[1]));
 
-      // 各种 Unicode 连字符/破折号变体
-      var DASHES = '[-\u2010\u2011\u2012\u2013\u2014\u2015\u2212~至到]';
-
       lines.forEach(function (line) {
         line = line.trim();
         if (!line) return;
-
-        // 跳过包含"累计"、"总计"、"日均"的行
         if (/累计|总计|日均|平均|合计/.test(line)) return;
 
-        // 格式1: "2025-01 704 369.00" 或 "2025/01 704 369"
-        var m1 = line.match(/(20\d{2})[-\/.](\d{1,2})\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)/);
-        if (m1) {
-          var month1 = parseInt(m1[2]);
-          var kwh1 = parseFloat(m1[3]);
-          var cost1 = parseFloat(m1[4]);
-          if (month1 >= 1 && month1 <= 12 && kwh1 > 0 && kwh1 < 5000 && cost1 > 0 && cost1 < 5000) {
-            results.push({ year: parseInt(m1[1]), month: month1, kwh: kwh1, cost: cost1 });
-            return;
-          }
-        }
+        // 找 "X月" 关键词
+        var monthMatch = line.match(/(\d{1,2})月/);
+        if (!monthMatch) return;
+        var month = parseInt(monthMatch[1]);
+        if (month < 1 || month > 12) return;
 
-        // 格式2: "1月1日-1月31日 1011 543"
-        // 使用更宽松的方式：先匹配日期范围，再提取所有数字
-        var dateRangeMatch = line.match(new RegExp('(\\d{1,2})月\\d{1,2}日?' + DASHES + '\\d{1,2}月\\d{1,2}日?'));
-        if (dateRangeMatch) {
-          var month2 = parseInt(dateRangeMatch[1]);
-          // 提取行中所有数字（支持噪点干扰）
-          var nums = line.match(/\d+(?:\.\d+)?/g);
-          if (nums && nums.length >= 3) {
-            // 取倒数两个数字作为电量和电费（避免开头月份数字被误用）
-            var kwh2 = parseFloat(nums[nums.length - 2]);
-            var cost2 = parseFloat(nums[nums.length - 1]);
-            if (month2 >= 1 && month2 <= 12 && kwh2 > 0 && kwh2 < 5000 && cost2 > 0 && cost2 < 5000) {
-              results.push({ year: currentYear, month: month2, kwh: kwh2, cost: cost2 });
-              return;
+        // 提取该行所有数字
+        var nums = line.match(/\d+(?:\.\d+)?/g);
+        if (!nums || nums.length < 3) return;
+
+        // 从后往前取两个有效数字作为电费和电量
+        var kwh = null, cost = null;
+        for (var i = nums.length - 1; i >= 1; i--) {
+          var val = parseFloat(nums[i]);
+          if (val > 0 && val < 5000) {
+            if (cost === null) {
+              cost = val;
+            } else if (kwh === null) {
+              kwh = val;
+              break;
             }
           }
         }
 
-        // 格式3: "1月 1011 543" (简单格式)
-        var m3 = line.match(/(\d{1,2})月\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)/);
-        if (m3) {
-          var month3 = parseInt(m3[1]);
-          var kwh3 = parseFloat(m3[2]);
-          var cost3 = parseFloat(m3[3]);
-          if (month3 >= 1 && month3 <= 12 && kwh3 > 0 && kwh3 < 5000 && cost3 > 0 && cost3 < 5000) {
-            // 排除年累计值
-            var isTotal = totals.indexOf(kwh3) !== -1 || totals.indexOf(cost3) !== -1;
-            if (!isTotal) {
-              results.push({ year: currentYear, month: month3, kwh: kwh3, cost: cost3 });
-            }
-            return;
-          }
-        }
-
-        // 格式4: 只有数字行 "01 704 369.00" (月份+电量+电费)
-        var m4 = line.match(/^(\d{1,2})\s+(\d{2,4}(?:\.\d+)?)\s+(\d{2,4}(?:\.\d+)?)$/);
-        if (m4) {
-          var month4 = parseInt(m4[1]);
-          var kwh4 = parseFloat(m4[2]);
-          var cost4 = parseFloat(m4[3]);
-          if (month4 >= 1 && month4 <= 12 && kwh4 > 0 && kwh4 < 5000 && cost4 > 0 && cost4 < 5000) {
-            results.push({ year: currentYear, month: month4, kwh: kwh4, cost: cost4 });
-            return;
+        if (kwh !== null && cost !== null) {
+          var isTotal = totals.indexOf(kwh) !== -1 || totals.indexOf(cost) !== -1;
+          if (!isTotal) {
+            results.push({ year: currentYear, month: month, kwh: kwh, cost: cost });
           }
         }
       });
 
-      // 去重（同年同月只保留一条）
       var seen = {};
       results = results.filter(function (r) {
         var key = r.year + '-' + r.month;
@@ -107,7 +81,6 @@
         return true;
       });
 
-      // 按时间排序
       results.sort(function (a, b) {
         return (a.year * 12 + a.month) - (b.year * 12 + b.month);
       });
@@ -117,18 +90,15 @@
 
     /**
      * 解析每日用电量数据
-     * 支持格式：
-     *   "2026-06-01 8.49"
-     *   "06-01 8.49"
-     *   日历网格格式 "1 8.49 2 2.59 3 4.65"
+     * 核心策略：提取所有数字对 (日期, 电量)
      */
     parseDaily: function (text) {
       var results = [];
+      text = this._cleanText(text);
       var lines = text.split(/\n/);
       var currentYear = new Date().getFullYear();
       var currentMonth = new Date().getMonth() + 1;
 
-      // 尝试提取年份和月份
       var ymMatch = text.match(/(20\d{2})[\/\-.](\d{1,2})/);
       if (ymMatch) {
         currentYear = parseInt(ymMatch[1]);
@@ -152,11 +122,9 @@
       lines.forEach(function (line) {
         line = line.trim();
         if (!line) return;
-
-        // 跳过统计行
         if (/合计|日均|平均|峰电量|谷电量|累计|总计/.test(line)) return;
 
-        // 格式1: "2026-06-01 8.49" 完整日期
+        // 格式1: 完整日期 "2026-06-01 8.49"
         var m1 = line.match(/(20\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})\s+(\d+(?:\.\d+)?)/);
         if (m1) {
           var y = parseInt(m1[1]);
@@ -164,43 +132,46 @@
           var d = parseInt(m1[3]);
           var kwh = parseFloat(m1[4]);
           if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && kwh > 0 && kwh < 200) {
-            var date = y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-            results.push({ date: date, kwh: kwh });
+            results.push({
+              date: y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'),
+              kwh: kwh
+            });
             return;
           }
         }
 
-        // 格式2: "06-01 8.49" 月-日
+        // 格式2: 月-日 "06-01 8.49"
         var m2 = line.match(/(\d{1,2})[-\/.](\d{1,2})\s+(\d+(?:\.\d+)?)/);
         if (m2) {
           var mo2 = parseInt(m2[1]);
           var d2 = parseInt(m2[2]);
           var kwh2 = parseFloat(m2[3]);
           if (mo2 >= 1 && mo2 <= 12 && d2 >= 1 && d2 <= 31 && kwh2 > 0 && kwh2 < 200) {
-            // 排除统计值
             if (stats.indexOf(kwh2) !== -1) return;
-            var date2 = currentYear + '-' + String(mo2).padStart(2, '0') + '-' + String(d2).padStart(2, '0');
-            results.push({ date: date2, kwh: kwh2 });
+            results.push({
+              date: currentYear + '-' + String(mo2).padStart(2, '0') + '-' + String(d2).padStart(2, '0'),
+              kwh: kwh2
+            });
             return;
           }
         }
 
-        // 格式3: 日历网格 "1 8.49 2 2.59 3 4.65" (日+电量交替)
+        // 格式3: 日历网格 "1 8.49 2 2.59 3 4.65"
         var gridPattern = /(\d{1,2})\s+(\d+\.\d+)/g;
         var gridMatch;
         while ((gridMatch = gridPattern.exec(line)) !== null) {
           var d3 = parseInt(gridMatch[1]);
           var kwh3 = parseFloat(gridMatch[2]);
           if (d3 >= 1 && d3 <= 31 && kwh3 > 0 && kwh3 < 200) {
-            // 排除统计值
             if (stats.indexOf(kwh3) !== -1) continue;
-            var date3 = currentYear + '-' + String(currentMonth).padStart(2, '0') + '-' + String(d3).padStart(2, '0');
-            results.push({ date: date3, kwh: kwh3 });
+            results.push({
+              date: currentYear + '-' + String(currentMonth).padStart(2, '0') + '-' + String(d3).padStart(2, '0'),
+              kwh: kwh3
+            });
           }
         }
       });
 
-      // 去重
       var seen = {};
       results = results.filter(function (r) {
         if (seen[r.date]) return false;
@@ -208,7 +179,6 @@
         return true;
       });
 
-      // 按日期排序
       results.sort(function (a, b) {
         return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0);
       });
@@ -218,33 +188,19 @@
 
     /**
      * 将新数据合并到已有数据中
-     * type: 'monthly' 或 'daily'
      */
     merge: function (existing, newData, type) {
       if (!existing || !Array.isArray(existing)) existing = [];
-      var keyField = type === 'monthly' ? 'month' : 'date';
-      var yearField = type === 'monthly' ? 'year' : null;
-
       var merged = existing.slice();
       var index = {};
 
-      // 建立索引
       merged.forEach(function (item, i) {
-        if (type === 'monthly') {
-          index[item.year + '-' + item.month] = i;
-        } else {
-          index[item.date] = i;
-        }
+        var key = type === 'monthly' ? (item.year + '-' + item.month) : item.date;
+        index[key] = i;
       });
 
-      // 合并新数据（覆盖同key的旧数据）
       newData.forEach(function (item) {
-        var key;
-        if (type === 'monthly') {
-          key = item.year + '-' + item.month;
-        } else {
-          key = item.date;
-        }
+        var key = type === 'monthly' ? (item.year + '-' + item.month) : item.date;
         if (index[key] !== undefined) {
           merged[index[key]] = item;
         } else {
@@ -253,7 +209,6 @@
         }
       });
 
-      // 排序
       if (type === 'monthly') {
         merged.sort(function (a, b) {
           return (a.year * 12 + a.month) - (b.year * 12 + b.month);
