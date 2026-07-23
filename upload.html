@@ -75,6 +75,69 @@ body {
 
 .type-btn .desc { font-size: 0.75rem; opacity: 0.8; margin-top: 4px; }
 
+.engine-section {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+.engine-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.engine-label {
+  font-size: 0.88rem;
+  color: var(--ink);
+  font-weight: bold;
+  white-space: nowrap;
+}
+.engine-tabs {
+  display: flex;
+  gap: 6px;
+}
+.engine-tab {
+  padding: 7px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.engine-tab:hover { border-color: var(--accent); color: var(--ink); }
+.engine-tab.active {
+  background: var(--green);
+  color: var(--bg);
+  border-color: var(--green);
+  font-weight: bold;
+}
+.gemini-config {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+.gemini-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.gemini-hint a { text-decoration: none; }
+.gemini-hint a:hover { text-decoration: underline; }
+.gemini-config input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 8px 12px;
+  font-size: 0.84rem;
+}
+.gemini-config input:focus { outline: none; border-color: var(--accent); }
+
 /* 上传区 */
 .upload-zone {
   border: 2px dashed var(--rule);
@@ -356,6 +419,23 @@ body {
   </button>
 </div>
 
+<div class="engine-section">
+  <div class="engine-row">
+    <span class="engine-label">识别引擎</span>
+    <div class="engine-tabs">
+      <button class="engine-tab active" data-engine="tesseract" onclick="selectEngine('tesseract')">本地 OCR（免费）</button>
+      <button class="engine-tab" data-engine="gemini" onclick="selectEngine('gemini')">AI 识别（推荐）</button>
+    </div>
+  </div>
+  <div class="gemini-config" id="geminiConfig" style="display:none">
+    <div class="gemini-hint">
+      使用 Google Gemini AI 识别，准确率远超本地 OCR。免费，每天 1500 次。
+      <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">点此获取 API Key &rarr;</a>
+    </div>
+    <input type="password" id="geminiKey" placeholder="输入 Gemini API Key（AIzaSy...）">
+  </div>
+</div>
+
 <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
   <div class="icon">📷</div>
   <div class="title">拖拽截图到这里 / 点击上传</div>
@@ -409,11 +489,13 @@ body {
 
 <div class="toast" id="toast"></div>
 
+<script src="./assets/gemini-ocr.js"></script>
 <script src="./assets/ocr-parser.js?v=2"></script>
 <script>
 var currentType = 'monthly';
 var currentImage = null;
 var parsedData = [];
+var currentEngine = 'tesseract';
 var worker = null;
 
 function selectType(type) {
@@ -424,6 +506,26 @@ function selectType(type) {
   // 重置结果
   hideResults();
 }
+
+function selectEngine(engine) {
+  currentEngine = engine;
+  document.querySelectorAll('.engine-tab').forEach(function (btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-engine') === engine);
+  });
+  document.getElementById('geminiConfig').style.display = engine === 'gemini' ? 'block' : 'none';
+  if (engine === 'gemini') {
+    var savedKey = window.GeminiOCR.getKey();
+    if (savedKey) {
+      document.getElementById('geminiKey').value = savedKey;
+    }
+  }
+  hideResults();
+}
+
+// 监听 Gemini Key 输入
+document.getElementById('geminiKey').addEventListener('input', function () {
+  window.GeminiOCR.setKey(this.value);
+});
 
 // 拖拽上传
 var uploadZone = document.getElementById('uploadZone');
@@ -469,8 +571,49 @@ function handleFile(file) {
   };
   reader.readAsDataURL(file);
 
-  // 开始 OCR
-  runOCR(file);
+  // 保存 Gemini Key
+  if (currentEngine === 'gemini') {
+    window.GeminiOCR.setKey(document.getElementById('geminiKey').value);
+  }
+  // 开始识别
+  if (currentEngine === 'gemini') {
+    runGemini(file);
+  } else {
+    runOCR(file);
+  }
+}
+
+async function runGemini(file) {
+  var progWrap = document.getElementById('progressWrap');
+  var progFill = document.getElementById('progressFill');
+  var progText = document.getElementById('progressText');
+  progWrap.style.display = 'block';
+  progFill.style.width = '10%';
+  try {
+    var results = await window.GeminiOCR.recognize(file, currentType, function (msg) {
+      progText.textContent = msg;
+      progFill.style.width = '60%';
+    });
+    progFill.style.width = '100%';
+    progText.textContent = '识别完成！';
+    setTimeout(function () { progWrap.style.display = 'none'; }, 500);
+    parsedData = results;
+    document.getElementById('rawTextWrap').style.display = 'none';
+    if (parsedData.length === 0) {
+      showToast('未识别到数据，请确认截图内容正确', true);
+    } else {
+      showToast('AI 识别到 ' + parsedData.length + ' 条数据');
+    }
+    showResults();
+  } catch (e) {
+    console.error('Gemini error:', e);
+    progText.textContent = '识别失败';
+    if (e.message.indexOf('API key') !== -1) {
+      showToast('请输入有效的 Gemini API Key', true);
+    } else {
+      showToast('AI 识别失败: ' + e.message, true);
+    }
+  }
 }
 
 async function runOCR(file) {
