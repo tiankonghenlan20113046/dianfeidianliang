@@ -375,6 +375,10 @@ body {
     <span>识别结果 <span style="font-weight:normal;font-size:0.75rem;color:var(--muted)">（可直接编辑修改）</span></span>
     <span class="count" id="resultCount"></span>
   </h3>
+  <div id="dailyWarnHint" style="display:none;font-size:0.8rem;color:var(--accent2);margin-bottom:10px;">
+    <span style="display:inline-block;width:8px;height:8px;background:var(--accent2);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>
+    日历视图识别准确率有限，黄色标记为可疑数据，请务必逐行核对后再导出
+  </div>
   <table class="edit-table" id="editTable">
     <thead id="editHead"></thead>
     <tbody id="editBody"></tbody>
@@ -555,6 +559,10 @@ function showResults() {
   document.getElementById('actionsBar').style.display = 'flex';
   document.getElementById('ghSection').style.display = 'block';
 
+  // 每日模式下显示警告提示
+  var hasWarn = currentType === 'daily' && parsedData.some(function (d) { return d._warn; });
+  document.getElementById('dailyWarnHint').style.display = hasWarn ? 'block' : 'none';
+
   count.textContent = parsedData.length + ' 条';
 
   // 表头
@@ -576,6 +584,11 @@ function addRow(data, index) {
   var tr = document.createElement('tr');
   tr.setAttribute('data-index', index);
 
+  // 可疑数据高亮
+  if (data._warn) {
+    tr.style.background = 'rgba(249,115,22,0.15)';
+  }
+
   if (currentType === 'monthly') {
     tr.innerHTML =
       '<td><input type="number" value="' + (data.year || '') + '" data-field="year"></td>' +
@@ -584,9 +597,10 @@ function addRow(data, index) {
       '<td><input type="number" step="0.01" value="' + (data.cost || '') + '" data-field="cost"></td>' +
       '<td><button class="del-btn" onclick="deleteRow(this)">&times;</button></td>';
   } else {
+    var warnIcon = data._warn ? '<span title="识别可疑，请核对" style="color:var(--accent2);margin-left:4px;cursor:help;">&#9888;</span>' : '';
     tr.innerHTML =
       '<td><input type="text" value="' + (data.date || '') + '" data-field="date"></td>' +
-      '<td><input type="number" step="0.01" value="' + (data.kwh || '') + '" data-field="kwh"></td>' +
+      '<td><input type="number" step="0.01" value="' + (data.kwh || '') + '" data-field="kwh">' + warnIcon + '</td>' +
       '<td><button class="del-btn" onclick="deleteRow(this)">&times;</button></td>';
   }
 

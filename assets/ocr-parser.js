@@ -90,7 +90,7 @@
 
     /**
      * 解析每日用电量数据
-     * 核心策略：提取所有数字对 (日期, 电量)
+     * 针对日历网格视图优化：识别日期-电量对，过滤统计值，标记可疑数据
      */
     parseDaily: function (text) {
       var results = [];
@@ -99,43 +99,46 @@
       var currentYear = new Date().getFullYear();
       var currentMonth = new Date().getMonth() + 1;
 
-      var ymMatch = text.match(/(20\d{2})[\/\-.](\d{1,2})/);
+      var ymMatch = text.match(/(20\d{2})[\/\-.年](\d{1,2})/);
       if (ymMatch) {
         currentYear = parseInt(ymMatch[1]);
         currentMonth = parseInt(ymMatch[2]);
       }
 
-      // 收集统计值用于排除
+      // 收集统计值用于排除（更全面的模式）
       var stats = [];
       var statPatterns = [
-        /合计[^\d]*(\d+(?:\.\d+)?)/,
-        /日均[^\d]*(\d+(?:\.\d+)?)/,
-        /平均[^\d]*(\d+(?:\.\d+)?)/,
-        /峰电量[^\d]*(\d+(?:\.\d+)?)/,
-        /谷电量[^\d]*(\d+(?:\.\d+)?)/
+        /合计电量?[^\d]*(\d+(?:\.\d+)?)/i,
+        /日均电量?[^\d]*(\d+(?:\.\d+)?)/i,
+        /平均[^\d]*(\d+(?:\.\d+)?)/i,
+        /峰电量?[^\d]*(\d+(?:\.\d+)?)/i,
+        /谷电量?[^\d]*(\d+(?:\.\d+)?)/i,
+        /合计[^\d]*(\d{3,}(?:\.\d+)?)/,
+        /累计[^\d]*(\d{3,}(?:\.\d+)?)/
       ];
       statPatterns.forEach(function (p) {
         var m = text.match(p);
         if (m) stats.push(parseFloat(m[1]));
       });
+      // 同时排除月份和年份本身
+      stats.push(currentYear, currentMonth);
 
       lines.forEach(function (line) {
         line = line.trim();
         if (!line) return;
-        if (/合计|日均|平均|峰电量|谷电量|累计|总计/.test(line)) return;
+        // 过滤包含统计关键词的行
+        if (/合计|日均|平均|峰电量|谷电量|累计|总计|切换户号|产品体验官/.test(line)) return;
+        // 过滤界面文案行
+        if (/日历视图|图表视图|用电明细|电量单位|每日用电|每月用电/.test(line)) return;
+        // 过滤星期标题行（日一二三四五六）
+        if (/^[\s日一二三四五六]+$/.test(line)) return;
 
         // 格式1: 完整日期 "2026-06-01 8.49"
         var m1 = line.match(/(20\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})\s+(\d+(?:\.\d+)?)/);
         if (m1) {
-          var y = parseInt(m1[1]);
-          var mo = parseInt(m1[2]);
-          var d = parseInt(m1[3]);
-          var kwh = parseFloat(m1[4]);
+          var y = parseInt(m1[1]), mo = parseInt(m1[2]), d = parseInt(m1[3]), kwh = parseFloat(m1[4]);
           if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && kwh > 0 && kwh < 200) {
-            results.push({
-              date: y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'),
-              kwh: kwh
-            });
+            results.push({ date: y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'), kwh: kwh, _warn: false });
             return;
           }
         }
@@ -143,35 +146,80 @@
         // 格式2: 月-日 "06-01 8.49"
         var m2 = line.match(/(\d{1,2})[-\/.](\d{1,2})\s+(\d+(?:\.\d+)?)/);
         if (m2) {
-          var mo2 = parseInt(m2[1]);
-          var d2 = parseInt(m2[2]);
-          var kwh2 = parseFloat(m2[3]);
+          var mo2 = parseInt(m2[1]), d2 = parseInt(m2[2]), kwh2 = parseFloat(m2[3]);
           if (mo2 >= 1 && mo2 <= 12 && d2 >= 1 && d2 <= 31 && kwh2 > 0 && kwh2 < 200) {
             if (stats.indexOf(kwh2) !== -1) return;
-            results.push({
-              date: currentYear + '-' + String(mo2).padStart(2, '0') + '-' + String(d2).padStart(2, '0'),
-              kwh: kwh2
-            });
+            results.push({ date: currentYear + '-' + String(mo2).padStart(2, '0') + '-' + String(d2).padStart(2, '0'), kwh: kwh2, _warn: false });
             return;
           }
         }
 
-        // 格式3: 日历网格 "1 8.49 2 2.59 3 4.65"
-        var gridPattern = /(\d{1,2})\s+(\d+\.\d+)/g;
-        var gridMatch;
-        while ((gridMatch = gridPattern.exec(line)) !== null) {
-          var d3 = parseInt(gridMatch[1]);
-          var kwh3 = parseFloat(gridMatch[2]);
-          if (d3 >= 1 && d3 <= 31 && kwh3 > 0 && kwh3 < 200) {
-            if (stats.indexOf(kwh3) !== -1) continue;
-            results.push({
-              date: currentYear + '-' + String(currentMonth).padStart(2, '0') + '-' + String(d3).padStart(2, '0'),
-              kwh: kwh3
-            });
+        // 格式3: 日历网格改进版
+        // 先提取该行所有数字token
+        var tokens = [];
+        var numRe = /\d+(?:\.\d+)?/g;
+        var nm;
+        while ((nm = numRe.exec(line)) !== null) {
+          var v = parseFloat(nm[0]);
+          if (stats.indexOf(v) !== -1) continue;
+          if (v > 500) continue; // 过滤超大数字（通常为误识别）
+          tokens.push({ str: nm[0], val: v });
+        }
+        if (tokens.length < 2) return;
+
+        // 配对策略：寻找 (日期1-31, 电量) 序列
+        var i = 0;
+        while (i < tokens.length) {
+          var curr = tokens[i];
+          var isDay = curr.val >= 1 && curr.val <= 31 && Number.isInteger(curr.val);
+
+          if (isDay && i + 1 < tokens.length) {
+            var next = tokens[i + 1];
+            // 电量特征：小数，或合理范围内的整数
+            var isKwh = (next.val > 0 && next.val < 100 && !Number.isInteger(next.val)) ||
+                        (Number.isInteger(next.val) && next.val > 0 && next.val < 50);
+
+            if (isKwh) {
+              // 标记可疑数据：日电量通常不会 >40（除非极端天气）
+              var suspicious = next.val > 40 || next.val < 0.5;
+              results.push({
+                date: currentYear + '-' + String(currentMonth).padStart(2, '0') + '-' + String(curr.val).padStart(2, '0'),
+                kwh: next.val,
+                _warn: suspicious
+              });
+              i += 2;
+              continue;
+            }
           }
+
+          // 处理连在一起的情况：字符串以日期开头，后面跟着电量
+          if (!isDay) {
+            var str = curr.str;
+            var found = false;
+            for (var day = 1; day <= 31; day++) {
+              var ds = String(day);
+              if (str.startsWith(ds) && str.length > ds.length) {
+                var rest = str.substring(ds.length);
+                var rv = parseFloat(rest);
+                if (!isNaN(rv) && rv > 0 && rv < 100) {
+                  results.push({
+                    date: currentYear + '-' + String(currentMonth).padStart(2, '0') + '-' + String(day).padStart(2, '0'),
+                    kwh: rv,
+                    _warn: rv > 40 || rv < 0.5
+                  });
+                  found = true;
+                  break;
+                }
+              }
+            }
+            if (found) { i++; continue; }
+          }
+
+          i++;
         }
       });
 
+      // 去重（保留第一次出现）
       var seen = {};
       results = results.filter(function (r) {
         if (seen[r.date]) return false;
@@ -179,9 +227,19 @@
         return true;
       });
 
-      results.sort(function (a, b) {
-        return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0);
-      });
+      // 按日期排序
+      results.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+
+      // 连续性检查：标记日期跳变异常（如 13→15 缺少14）
+      for (var j = 1; j < results.length; j++) {
+        var prevDay = parseInt(results[j - 1].date.split('-')[2]);
+        var currDay = parseInt(results[j].date.split('-')[2]);
+        if (currDay !== prevDay + 1) {
+          // 日期不连续，标记前后两条为可疑
+          results[j - 1]._warn = true;
+          results[j]._warn = true;
+        }
+      }
 
       return results;
     },
