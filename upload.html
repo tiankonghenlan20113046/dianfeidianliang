@@ -424,15 +424,15 @@ body {
     <span class="engine-label">识别引擎</span>
     <div class="engine-tabs">
       <button class="engine-tab active" data-engine="tesseract" onclick="selectEngine('tesseract')">本地 OCR（免费）</button>
-      <button class="engine-tab" data-engine="gemini" onclick="selectEngine('gemini')">AI 识别（推荐）</button>
+      <button class="engine-tab" data-engine="zhipu" onclick="selectEngine('zhipu')">AI 识别（推荐）</button>
     </div>
   </div>
-  <div class="gemini-config" id="geminiConfig" style="display:none">
+  <div class="gemini-config" id="zhipuConfig" style="display:none">
     <div class="gemini-hint">
-      使用 Google Gemini AI 识别，准确率远超本地 OCR。免费，每天 1500 次。
-      <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">点此获取 API Key &rarr;</a>
+      使用智谱AI GLM-4V-Flash 识别，准确率远超本地 OCR。国内服务，永久免费。
+      <a href="https://open.bigmodel.cn/usercenter/apikeys" target="_blank" style="color:var(--accent)">点此获取 API Key &rarr;</a>
     </div>
-    <input type="password" id="geminiKey" placeholder="输入 Gemini API Key（AIzaSy...）">
+    <input type="password" id="zhipuKey" placeholder="输入智谱AI API Key">
   </div>
 </div>
 
@@ -489,7 +489,7 @@ body {
 
 <div class="toast" id="toast"></div>
 
-<script src="./assets/gemini-ocr.js"></script>
+<script src="./assets/zhipu-ocr.js"></script>
 <script src="./assets/ocr-parser.js?v=2"></script>
 <script>
 var currentType = 'monthly';
@@ -512,19 +512,19 @@ function selectEngine(engine) {
   document.querySelectorAll('.engine-tab').forEach(function (btn) {
     btn.classList.toggle('active', btn.getAttribute('data-engine') === engine);
   });
-  document.getElementById('geminiConfig').style.display = engine === 'gemini' ? 'block' : 'none';
-  if (engine === 'gemini') {
-    var savedKey = window.GeminiOCR.getKey();
+  document.getElementById('zhipuConfig').style.display = engine === 'zhipu' ? 'block' : 'none';
+  if (engine === 'zhipu') {
+    var savedKey = window.ZhipuOCR.getKey();
     if (savedKey) {
-      document.getElementById('geminiKey').value = savedKey;
+      document.getElementById('zhipuKey').value = savedKey;
     }
   }
   hideResults();
 }
 
-// 监听 Gemini Key 输入
-document.getElementById('geminiKey').addEventListener('input', function () {
-  window.GeminiOCR.setKey(this.value);
+// 监听智谱AI Key 输入
+document.getElementById('zhipuKey').addEventListener('input', function () {
+  window.ZhipuOCR.setKey(this.value);
 });
 
 // 拖拽上传
@@ -571,26 +571,26 @@ function handleFile(file) {
   };
   reader.readAsDataURL(file);
 
-  // 保存 Gemini Key
-  if (currentEngine === 'gemini') {
-    window.GeminiOCR.setKey(document.getElementById('geminiKey').value);
+  // 保存智谱AI Key
+  if (currentEngine === 'zhipu') {
+    window.ZhipuOCR.setKey(document.getElementById('zhipuKey').value);
   }
   // 开始识别
-  if (currentEngine === 'gemini') {
-    runGemini(file);
+  if (currentEngine === 'zhipu') {
+    runZhipu(file);
   } else {
     runOCR(file);
   }
 }
 
-async function runGemini(file) {
+async function runZhipu(file) {
   var progWrap = document.getElementById('progressWrap');
   var progFill = document.getElementById('progressFill');
   var progText = document.getElementById('progressText');
   progWrap.style.display = 'block';
   progFill.style.width = '10%';
   try {
-    var results = await window.GeminiOCR.recognize(file, currentType, function (msg) {
+    var results = await window.ZhipuOCR.recognize(file, currentType, function (msg) {
       progText.textContent = msg;
       progFill.style.width = '60%';
     });
@@ -606,10 +606,10 @@ async function runGemini(file) {
     }
     showResults();
   } catch (e) {
-    console.error('Gemini error:', e);
+    console.error('Zhipu error:', e);
     progText.textContent = '识别失败';
-    if (e.message.indexOf('API key') !== -1) {
-      showToast('请输入有效的 Gemini API Key', true);
+    if (e.message.indexOf('API key') !== -1 || e.message.indexOf('api_key') !== -1) {
+      showToast('请输入有效的智谱AI API Key', true);
     } else {
       showToast('AI 识别失败: ' + e.message, true);
     }
