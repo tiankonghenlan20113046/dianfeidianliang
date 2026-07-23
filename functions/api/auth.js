@@ -8,14 +8,6 @@ const CODE_LENGTH = 6;
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  // CORS
-  if (request.headers.get('Origin')) {
-    return new Response(JSON.stringify({ error: 'CORS not allowed for POST from external origin' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
   try {
     const body = await request.json();
     const { action, email, code } = body;
