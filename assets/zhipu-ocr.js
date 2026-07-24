@@ -51,7 +51,7 @@
           ]
         }],
         temperature: 0.1,
-        max_tokens: 4096
+        max_tokens: 1024
       };
 
       var res = await fetch(this._apiUrl, {
